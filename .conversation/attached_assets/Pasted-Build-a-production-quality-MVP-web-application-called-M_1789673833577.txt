@@ -1,0 +1,645 @@
+Build a production-quality MVP web application called MEKRIVO.
+
+MEKRIVO is a destination-aware file readiness platform.
+
+Core idea:
+
+A user has a file and needs to upload it somewhere, but the destination has requirements such as file type, maximum file size, dimensions, page count, aspect ratio, filename rules, encryption restrictions, or other technical constraints.
+
+MEKRIVO should help the user:
+
+1. Upload a file.
+2. Tell MEKRIVO where the file is going, either by:
+    * entering a destination name,
+    * entering a URL,
+    * or selecting a predefined destination.
+3. Determine the technical requirements for that destination.
+4. Analyze the uploaded file against those requirements.
+5. Clearly show what passes and what fails.
+6. Automatically fix mechanical problems where possible.
+7. Re-check the resulting file.
+8. Show a final READY / PASS state.
+
+IMPORTANT PRODUCT PRINCIPLE:
+
+Do NOT build this as another generic PDF toolbox.
+
+The primary experience must always be:
+
+FILE → REQUIREMENTS → CHECK → FIX → VERIFY → READY
+
+Generic file tools can exist, but they are secondary.
+
+==================================================
+PRODUCT NAME
+
+MEKRIVO
+
+Use MEKRIVO consistently throughout the application.
+
+Do not use placeholder product names.
+
+==================================================
+TECH STACK
+
+Build a modern responsive web application.
+
+Preferred stack:
+
+* Next.js
+* TypeScript
+* React
+* Tailwind CSS
+* shadcn/ui where useful
+* Server-side APIs only where necessary
+* Local/browser processing whenever technically possible
+* No unnecessary external AI APIs
+* No paid APIs
+* No unnecessary database dependency for the first MVP
+
+The architecture must be clean enough to later become:
+
+* iOS app
+* Android app
+* browser extension
+* public API
+
+Do not create architecture that makes those future products difficult.
+
+==================================================
+PRIVACY
+
+Privacy is an important product differentiator.
+
+Whenever possible, process files locally in the browser.
+
+Do not upload user files to third-party services.
+
+Do not permanently store uploaded files.
+
+Clearly communicate this in the UI.
+
+If a future feature requires server processing, isolate it behind a clean service interface.
+
+==================================================
+MAIN HOME PAGE
+
+Create a polished SaaS-style landing/application interface.
+
+Hero:
+
+“Make your file ready.”
+
+Supporting text:
+
+“Check, fix, and verify your file before you upload it.”
+
+Primary actions:
+
+* Upload a file
+* Paste a destination URL
+* Choose a destination
+
+The interface should immediately communicate that MEKRIVO is not simply a PDF editor.
+
+Suggested workflow visualization:
+
+UPLOAD
+↓
+CHECK
+↓
+FIX
+↓
+VERIFY
+↓
+READY
+
+Create a prominent drag-and-drop upload area.
+
+Allow common file types:
+
+* PDF
+* JPG
+* JPEG
+* PNG
+* WEBP
+* DOCX
+
+The architecture should make adding more formats easy.
+
+==================================================
+DESTINATION WORKFLOW
+
+After the user uploads a file, ask:
+
+“Where are you uploading this?”
+
+Options:
+
+* Enter destination
+* Paste URL
+* Choose from popular destinations
+
+For the MVP, implement a local destination requirement registry.
+
+Create a clean data structure such as:
+
+Destination
+
+* id
+* name
+* url
+* description
+* requirements
+* source
+* sourceUrl
+* lastVerified
+* confidence
+
+Requirement types should include:
+
+* allowed file extensions
+* maximum file size
+* minimum file size
+* maximum pages
+* minimum pages
+* image width
+* image height
+* aspect ratio
+* maximum dimensions
+* filename pattern
+* encryption allowed
+* password protection allowed
+* required orientation
+* MIME type
+
+Do NOT hardcode these rules directly into UI components.
+
+Create a reusable requirement engine.
+
+==================================================
+REQUIREMENT ENGINE
+
+Create a reusable rule engine.
+
+Example conceptual rule:
+
+{
+type: “maxFileSize”,
+value: 5000000,
+unit: “bytes”
+}
+
+Other examples:
+
+{
+type: “allowedExtension”,
+values: [“pdf”]
+}
+
+{
+type: “maxPages”,
+value: 10
+}
+
+{
+type: “imageDimensions”,
+maxWidth: 2000,
+maxHeight: 2000
+}
+
+The engine should produce results like:
+
+PASS
+FAIL
+WARNING
+UNKNOWN
+
+Every check should return:
+
+* rule
+* actual value
+* required value
+* status
+* human-readable explanation
+* whether MEKRIVO can automatically fix it
+
+==================================================
+FILE ANALYSIS
+
+Create a file analysis service.
+
+It should extract as much information as possible locally:
+
+* filename
+* extension
+* MIME type
+* file size
+* dimensions
+* page count where possible
+* image format
+* PDF metadata where possible
+* encryption/password status where possible
+
+Create a normalized FileMetadata object.
+
+Example:
+
+{
+fileName,
+extension,
+mimeType,
+sizeBytes,
+width,
+height,
+pageCount,
+aspectRatio,
+encrypted
+}
+
+The system must gracefully handle unsupported metadata.
+
+==================================================
+CHECK RESULT UI
+
+After analysis, show a clear report.
+
+Example:
+
+YOUR FILE
+
+application.pdf
+2.8 MB
+PDF
+8 pages
+
+CHECK RESULTS
+
+✓ File type
+PDF — accepted
+
+✕ File size
+2.8 MB — maximum allowed is 2 MB
+
+✓ Page count
+8 pages — accepted
+
+✓ Filename
+Accepted
+
+Then show:
+
+“1 issue needs to be fixed.”
+
+Primary button:
+
+“FIX EVERYTHING”
+
+Do not make the user manually understand technical details.
+
+==================================================
+FIX ENGINE
+
+Create a Fix Engine with a clean abstraction.
+
+The Fix Engine should know which failures are automatically fixable.
+
+MVP fixes:
+
+PDF:
+
+* compress PDF
+* remove metadata where safe
+* rotate pages
+* reorder pages
+* remove pages
+* merge PDFs
+* split PDF
+
+Images:
+
+* resize
+* compress
+* convert JPG/PNG/WEBP
+* change dimensions
+* change quality
+
+Documents:
+
+* DOCX → PDF where technically possible
+
+Every fix must return a new file and never destroy the original.
+
+==================================================
+VERIFY AFTER FIX
+
+This is critical.
+
+Never simply tell the user that a fix succeeded.
+
+After every automatic fix:
+
+1. Generate output file.
+2. Analyze output again.
+3. Run the requirement engine again.
+4. Confirm whether every required rule passes.
+
+Only show:
+
+READY
+
+when the verification actually passes.
+
+Example:
+
+FIXING…
+↓
+VERIFYING…
+↓
+✓ File type
+✓ File size
+✓ Dimensions
+✓ Pages
+✓ Filename
+
+MEKRIVO
+
+READY TO UPLOAD
+
+Provide:
+
+“Download ready file”
+
+==================================================
+REJECTION WORKFLOW
+
+Create a second entry point:
+
+“My file was rejected”
+
+The user can:
+
+* upload the rejected file
+* optionally upload a screenshot of the rejection
+* enter the destination
+
+For the MVP, implement the UI and data model even if screenshot AI analysis is not implemented yet.
+
+Show a future-ready architecture for:
+
+Screenshot → requirement extraction → rule generation
+
+Do not fake AI functionality.
+
+If a feature is not implemented, clearly mark it as future functionality rather than pretending it works.
+
+==================================================
+TOOLS PAGE
+
+Create a secondary Tools section.
+
+Include:
+
+* Compress PDF
+* Merge PDF
+* Split PDF
+* PDF → JPG
+* JPG → PDF
+* Resize Image
+* Compress Image
+* Convert Image
+* Rotate PDF
+* Delete PDF pages
+* Reorder PDF pages
+
+Important:
+
+These tools should NOT dominate the home page.
+
+The main CTA must remain:
+
+“Make my file ready.”
+
+==================================================
+DESTINATION LIBRARY
+
+Create a destination library architecture.
+
+Example categories:
+
+* Government
+* Universities
+* Visa / Immigration
+* Jobs
+* Marketplaces
+* Banking
+* Insurance
+* Education
+
+For the MVP, populate only a small number of clearly marked example destinations.
+
+Do NOT invent official requirements.
+
+If a requirement has not been verified from an official source, mark it:
+
+“Not verified”
+
+and do not present it as an official requirement.
+
+Each destination should have:
+
+* requirement list
+* official source URL
+* last verified date
+* verification status
+
+==================================================
+SEO
+
+Create SEO-friendly architecture.
+
+Every destination page should eventually support:
+
+/destinations/[slug]
+
+Example:
+
+/destinations/example-upload
+
+Use proper:
+
+* title
+* meta description
+* canonical URL
+* structured headings
+* Open Graph metadata
+
+Do NOT generate thousands of low-quality pages.
+
+==================================================
+DESIGN
+
+Design should feel like a serious modern global SaaS product.
+
+Avoid:
+
+* childish gradients
+* excessive animations
+* generic AI robot imagery
+* clutter
+* unnecessary dashboards
+* fake statistics
+
+Use:
+
+* clean typography
+* strong spacing
+* clear hierarchy
+* subtle borders
+* professional cards
+* clear success/error states
+
+The interface must work extremely well on:
+
+* iPhone
+* iPad
+* desktop
+
+Mobile-first is important.
+
+==================================================
+NAVIGATION
+
+Create:
+
+Home
+Tools
+Destinations
+My Files
+
+For the MVP, “My Files” can be a local/session-based area.
+
+Do not build authentication unless required for the architecture.
+
+==================================================
+ERROR HANDLING
+
+Every operation must have useful error states.
+
+Examples:
+
+Unsupported file
+Corrupted file
+Unable to read PDF
+Unable to determine requirement
+Fix failed
+Verification failed
+
+Never silently fail.
+
+Never claim a file is ready if verification failed.
+
+==================================================
+CODE QUALITY
+
+Use reusable components.
+
+Separate:
+
+* UI
+* file processing
+* requirement engine
+* destination registry
+* fix engine
+* verification engine
+
+Do not put business logic directly into React components.
+
+Create interfaces/types for future implementations.
+
+For example:
+
+FileAnalyzer
+RequirementEngine
+FixEngine
+Verifier
+DestinationProvider
+
+==================================================
+SECURITY
+
+Validate:
+
+* file type
+* file size
+* filenames
+* uploaded content
+
+Prevent obvious malicious file handling.
+
+Never execute uploaded files.
+
+Avoid unnecessary server-side persistence.
+
+==================================================
+MVP PRIORITY
+
+Do NOT attempt to build every possible feature immediately.
+
+Priority order:
+
+1. Upload
+2. File analysis
+3. Destination selection
+4. Requirement engine
+5. PASS/FAIL result
+6. Automatic compression/resizing
+7. Re-verification
+8. READY state
+9. Secondary tools
+10. Destination library
+11. Rejection workflow UI
+
+The core flow must work end-to-end before adding cosmetic features.
+
+==================================================
+IMPORTANT
+
+Do not stop after creating a visual mockup.
+
+Build a functioning MVP.
+
+Use real file processing where possible.
+
+Do not create fake buttons that do nothing.
+
+If a dependency is required, choose a free/open-source option.
+
+Do not add paid APIs.
+
+Do not add analytics or advertising yet.
+
+At the end:
+
+1. Run the application.
+2. Test the main upload flow.
+3. Test at least one PDF.
+4. Test at least one image.
+5. Test a file that passes.
+6. Test a file that fails a requirement.
+7. Test an automatic fix.
+8. Test that the fixed file is re-verified.
+9. Fix any runtime or TypeScript errors.
+10. Make sure the application works on mobile and desktop.
+
+Finally provide a concise summary of:
+
+* what was implemented
+* what is fully functional
+* what is intentionally deferred
+* how to run the project
+* the next three recommended development steps
+
+Do not rename the project.
+
+The product name is MEKRIVO.
